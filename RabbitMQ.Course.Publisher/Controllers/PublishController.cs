@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using RabbitMQ.Client;
 
@@ -15,11 +16,17 @@ public class PublishController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get([FromQuery] string message)
     {
+        using (IConnection rabbitMQConnection = await this._rabbitMQConnectionFactory.CreateConnectionAsync())
+        using (IChannel rabbitMQChannel = await rabbitMQConnection.CreateChannelAsync())
+        {
+            await rabbitMQChannel.BasicPublishAsync("", "Queue-1", Encoding.UTF8.GetBytes(message));
+        }
+
         return Ok(new
         {
-            result = "OK"
+            PublishedMessage = message
         });
     }
 }

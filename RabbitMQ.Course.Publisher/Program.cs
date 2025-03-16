@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
@@ -47,7 +48,11 @@ namespace RabbitMQ.Course.Publisher
                 };
             });
 
-            services.AddControllers();
+            services.AddControllers()
+                    .AddJsonOptions(jsonOptions =>
+                    {
+                        jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+                    });
         }
     }
 }
