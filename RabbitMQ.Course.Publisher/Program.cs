@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
-using RabbitMQ.Course.Publisher.HostedServices;
+using RabbitMQ.Course.Publisher.Extensions;
 
 namespace RabbitMQ.Course.Publisher
 {
@@ -47,17 +47,21 @@ namespace RabbitMQ.Course.Publisher
         {
             services.Configure<ApiOptions>(config);
 
+            services.AddRabbitMQConnectionManager();
+            services.AddApplicationHostedServices();
+
             services.AddSingleton<IConnectionFactory>(serviceProvider =>
             {
                 IOptions<ApiOptions> apiOptions = serviceProvider.GetRequiredService<IOptions<ApiOptions>>();
 
                 return new ConnectionFactory
                 {
-                    HostName = apiOptions.Value.RabbitMqHost
+                    HostName = apiOptions.Value.RabbitMqHost,
+
+                    UserName = apiOptions.Value.RabbitMqUsername,
+                    Password = apiOptions.Value.RabbitMqPassword
                 };
             });
-
-            services.AddHostedService<RabbitMQConsumer>();
 
             services.AddControllers()
                     .AddJsonOptions(jsonOptions =>

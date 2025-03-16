@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using RabbitMQ.Client;
+using RabbitMQ.Course.Publisher.Services;
 
 namespace RabbitMQ.Course.Publisher.Controllers
 {
@@ -8,18 +9,15 @@ namespace RabbitMQ.Course.Publisher.Controllers
     [Route("[controller]")]
     public class PublishController : ControllerBase
     {
-        private readonly IConnectionFactory _rabbitMQConnectionFactory;
+        private readonly IChannel _rabbitMQChannel;
 
-        public PublishController(IConnectionFactory _rabbitMQConnectionFactory) => this._rabbitMQConnectionFactory = _rabbitMQConnectionFactory;
+        public PublishController(RabbitMQConnectionManager rabbitMQConnectionManager) =>
+            this._rabbitMQChannel = rabbitMQConnectionManager.PublisherChannel;
 
         [HttpGet]
         public async Task<IActionResult> Get([FromQuery] string message)
         {
-            using (IConnection rabbitMQConnection = await this._rabbitMQConnectionFactory.CreateConnectionAsync())
-            using (IChannel rabbitMQChannel = await rabbitMQConnection.CreateChannelAsync())
-            {
-                await rabbitMQChannel.BasicPublishAsync("", "Queue-1", Encoding.UTF8.GetBytes(message));
-            }
+            await this._rabbitMQChannel.BasicPublishAsync("", "Queue-1", Encoding.UTF8.GetBytes(message));
 
             return this.Ok(new
             {

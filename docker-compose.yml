@@ -6,6 +6,11 @@ services:
       dockerfile: RabbitMQ.Course.Publisher/Dockerfile
     environment:
       - RABBIT_MQ_HOST=${RABBIT_MQ_HOST}
+      - RABBIT_MQ_USERNAME=${RABBIT_MQ_USERNAME}
+      - RABBIT_MQ_PASSWORD=${RABBIT_MQ_PASSWORD}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       backend:
   rabbitmq:
@@ -13,6 +18,15 @@ services:
     hostname: rabbitmq
     ports:
       - 15672:15672
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBIT_MQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBIT_MQ_PASSWORD}
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "ping"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
     networks:
       backend:
 
