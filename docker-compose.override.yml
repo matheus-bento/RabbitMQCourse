@@ -1,5 +1,5 @@
 services:
-  api:
+  publisher:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=80

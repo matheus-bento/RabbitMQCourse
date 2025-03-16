@@ -4,7 +4,7 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "rabbitmq.course.api": "StartDebugging"
+        "rabbitmq.course.publisher": "StartDebugging"
       }
     }
   }

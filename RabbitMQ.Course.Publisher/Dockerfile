@@ -11,19 +11,19 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["RabbitMQ.Course.Api/RabbitMQ.Course.Api.csproj", "RabbitMQ.Course.Api/"]
-RUN dotnet restore "./RabbitMQ.Course.Api/RabbitMQ.Course.Api.csproj"
+COPY ["RabbitMQ.Course.Publisher/RabbitMQ.Course.Publisher.csproj", "RabbitMQ.Course.Publisher/"]
+RUN dotnet restore "./RabbitMQ.Course.Publisher/RabbitMQ.Course.Publisher.csproj"
 COPY . .
-WORKDIR "/src/RabbitMQ.Course.Api"
-RUN dotnet build "./RabbitMQ.Course.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/RabbitMQ.Course.Publisher"
+RUN dotnet build "./RabbitMQ.Course.Publisher.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # Esta fase é usada para publicar o projeto de serviço a ser copiado para a fase final
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./RabbitMQ.Course.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./RabbitMQ.Course.Publisher.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # Esta fase é usada na produção ou quando executada no VS no modo normal (padrão quando não está usando a configuração de Depuração)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "RabbitMQ.Course.Api.dll"]
+ENTRYPOINT ["dotnet", "RabbitMQ.Course.Publisher.dll"]

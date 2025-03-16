@@ -1,9 +1,11 @@
 services:
-  api:
-    image: ${DOCKER_REGISTRY-}rabbitmq-course-api
+  publisher:
+    image: ${DOCKER_REGISTRY-}rabbitmq-course-publisher
     build:
       context: .
-      dockerfile: RabbitMQ.Course.Api/Dockerfile
+      dockerfile: RabbitMQ.Course.Publisher/Dockerfile
+    environment:
+      - RABBIT_MQ_HOST=${RABBIT_MQ_HOST}
     networks:
       backend:
   rabbitmq:
