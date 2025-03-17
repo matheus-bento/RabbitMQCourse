@@ -25,34 +25,45 @@ namespace RabbitMQ.Course.Publisher.HostedServices
 
         private async Task ConsumeMessages(CancellationToken cancellationToken)
         {
-            var consumer = new AsyncEventingBasicConsumer(this._rabbitMQChannel);
-
-            consumer.ReceivedAsync += (sender, eventArgs) =>
+            try
             {
-                try
-                {
-                    var messageBytes = eventArgs.Body.ToArray();
+                var consumer = new AsyncEventingBasicConsumer(this._rabbitMQChannel);
 
-                    if (messageBytes.Length > 0)
+                consumer.ReceivedAsync += (sender, eventArgs) =>
+                {
+                    try
                     {
-                        var message = Encoding.UTF8.GetString(messageBytes);
-                        this._logger.LogInformation($"Received message: {message}");
+                        var messageBytes = eventArgs.Body.ToArray();
+
+                        if (messageBytes.Length > 0)
+                        {
+                            var message = Encoding.UTF8.GetString(messageBytes);
+                            this._logger.LogInformation($"Exchange-C received a message: {message}");
+                        }
+
+                        return Task.CompletedTask;
                     }
+                    catch (Exception e)
+                    {
+                        return Task.FromException(e);
+                    }
+                };
 
-                    return Task.CompletedTask;
-                }
-                catch (Exception e)
+                await this._rabbitMQChannel.ExchangeDeclareAsync("Exchange-C", ExchangeType.Direct);
+
+                QueueDeclareOk queueDeclareResult = await this._rabbitMQChannel.QueueDeclareAsync();
+                await this._rabbitMQChannel.QueueBindAsync(queueDeclareResult.QueueName, "Exchange-C", null);
+
+                await this._rabbitMQChannel.BasicConsumeAsync(queueDeclareResult.QueueName, true, consumer);
+
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    return Task.FromException(e);
+
                 }
-            };
-
-            // TODO: bind to a direct exchange
-            //await rabbitMQChannel.ExchangeBindAsync();
-
-            while (!cancellationToken.IsCancellationRequested)
+            }
+            catch (Exception ex)
             {
-
+                this._logger.LogError(ex, "An error occurred in {0}", nameof(RabbitMQDirectConsumerC));
             }
         }
     }

@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using RabbitMQ.Client;
+using RabbitMQ.Course.Publisher.Models;
 using RabbitMQ.Course.Publisher.Services;
 
 namespace RabbitMQ.Course.Publisher.Controllers
@@ -14,14 +15,25 @@ namespace RabbitMQ.Course.Publisher.Controllers
         public PublishController(RabbitMQConnectionManager rabbitMQConnectionManager) =>
             this._rabbitMQChannel = rabbitMQConnectionManager.PublisherChannel;
 
-        [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] string message)
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody] PublishRequest req)
         {
-            await this._rabbitMQChannel.BasicPublishAsync("", "Queue-1", Encoding.UTF8.GetBytes(message));
-
-            return this.Ok(new
+            if (req == null)
             {
-                PublishedMessage = message
+                return this.BadRequest(new ErrorResponse
+                {
+                    Error = "Body not included in the request"
+                });
+            }
+
+            if (req.Exchange != null)
+                await this._rabbitMQChannel.BasicPublishAsync(req.Exchange, null, Encoding.UTF8.GetBytes(req.Message));
+            else
+                await this._rabbitMQChannel.BasicPublishAsync(null, "Queue-1", Encoding.UTF8.GetBytes(req.Message));
+
+            return this.Ok(new PublishResponse
+            {
+                PublishedMessage = req.Message
             });
         }
     }

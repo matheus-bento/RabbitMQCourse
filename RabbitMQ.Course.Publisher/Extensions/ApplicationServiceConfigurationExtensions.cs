@@ -26,9 +26,9 @@ namespace RabbitMQ.Course.Publisher.Extensions
         {
             services.AddHostedService<RabbitMQQueueConsumer>();
 
-            //services.AddHostedService<RabbitMQDirectConsumerA>();
-            //services.AddHostedService<RabbitMQDirectConsumerB>();
-            //services.AddHostedService<RabbitMQDirectConsumerC>();
+            services.AddHostedService<RabbitMQDirectConsumerA>();
+            services.AddHostedService<RabbitMQDirectConsumerB>();
+            services.AddHostedService<RabbitMQDirectConsumerC>();
 
             return services;
         }
