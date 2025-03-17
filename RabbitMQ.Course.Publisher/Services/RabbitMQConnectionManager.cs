@@ -7,36 +7,57 @@ namespace RabbitMQ.Course.Publisher.Services
         private IConnectionFactory _connectionFactory;
 
         private IConnection _publisherConnection;
-        private IConnection _consumerConnection;
-
         private IChannel _publisherChannel;
+        
+        private IConnection _consumerConnection;
         private IChannel _consumerChannel;
 
         public RabbitMQConnectionManager(IConnectionFactory connectionFactory)
         {
             this._connectionFactory = connectionFactory;
+        }
 
-            this._publisherConnection = this._connectionFactory.CreateConnectionAsync().Result;
-            this._consumerConnection = this._connectionFactory.CreateConnectionAsync().Result;
+        public IConnection PublisherConnection
+        {
+            get
+            {
+                if (this._publisherConnection == null || !this._publisherConnection.IsOpen)
+                    this._publisherConnection = this._connectionFactory.CreateConnectionAsync().Result;
 
-            this._publisherChannel = this._publisherConnection.CreateChannelAsync().Result;
-            this._consumerChannel = this._consumerConnection.CreateChannelAsync().Result;
+                return this._publisherConnection;
+            }
         }
 
         public IChannel PublisherChannel
         {
-            get =>
-                this._publisherChannel.IsOpen ?
-                this._publisherChannel :
-                this._publisherConnection.CreateChannelAsync().Result;
+            get
+            {
+                if (this._publisherChannel == null || !this._publisherChannel.IsOpen)
+                    this._publisherChannel = this.PublisherConnection.CreateChannelAsync().Result;
+
+                return this._publisherChannel;
+            }
         }
 
+        public IConnection ConsumerConnection
+        {
+            get
+            {
+                if (this._consumerConnection == null || !this._consumerConnection.IsOpen)
+                    this._consumerConnection = this._connectionFactory.CreateConnectionAsync().Result;
+
+                return this._consumerConnection;
+            }
+        }
         public IChannel ConsumerChannel
         {
-            get =>
-                this._consumerChannel.IsOpen ?
-                this._consumerChannel :
-                this._consumerConnection.CreateChannelAsync().Result;
+            get
+            {
+                if (this._consumerChannel == null || !this._consumerChannel.IsOpen)
+                    this._consumerChannel = this.ConsumerConnection.CreateChannelAsync().Result;
+
+                return this._consumerChannel;
+            }
         }
 
         public void Dispose()
