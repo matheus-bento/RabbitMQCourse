@@ -2,15 +2,15 @@
 
 namespace RabbitMQ.Course.Publisher.Services
 {
-    public class RabbitMQConnectionManager : IDisposable
+    public class RabbitMQConnectionManager : IAsyncDisposable, IDisposable
     {
         private IConnectionFactory _connectionFactory;
 
-        private readonly IConnection _publisherConnection;
-        private readonly IConnection _consumerConnection;
+        private IConnection _publisherConnection;
+        private IConnection _consumerConnection;
 
-        private readonly IChannel _publisherChannel;
-        private readonly IChannel _consumerChannel;
+        private IChannel _publisherChannel;
+        private IChannel _consumerChannel;
 
         public RabbitMQConnectionManager(IConnectionFactory connectionFactory)
         {
@@ -41,17 +41,76 @@ namespace RabbitMQ.Course.Publisher.Services
 
         public void Dispose()
         {
-            this._publisherChannel.CloseAsync().Wait();
-            this._consumerChannel.CloseAsync().Wait();
+            if (this._publisherChannel != null)
+            {
+                this._publisherChannel.CloseAsync().Wait();
+                this._publisherChannel.Dispose();
 
-            this._publisherConnection.CloseAsync().Wait();
-            this._consumerConnection.CloseAsync().Wait();
+                this._publisherChannel = null;
+            }
 
-            this._publisherChannel.Dispose();
-            this._consumerChannel.Dispose();
+            if (this._publisherConnection != null)
+            {
+                this._publisherConnection.CloseAsync().Wait();
+                this._publisherConnection.Dispose();
 
-            this._publisherConnection.Dispose();
-            this._consumerConnection.Dispose();
+                this._publisherConnection = null;
+            }
+
+            if (this._consumerChannel != null)
+            {
+                this._consumerChannel.CloseAsync().Wait();
+                this._consumerChannel.Dispose();
+
+                this._consumerChannel = null;
+            }
+
+            if (this._consumerConnection != null)
+            {
+                this._consumerConnection.CloseAsync().Wait();
+                this._consumerConnection.Dispose();
+
+                this._consumerConnection = null;
+            }
+
+            GC.SuppressFinalize(this);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (this._publisherChannel != null)
+            {
+                await this._publisherChannel.CloseAsync();
+                await this._publisherChannel.DisposeAsync().ConfigureAwait(false);
+
+                this._publisherChannel = null;
+            }
+
+            if (this._publisherConnection != null)
+            {
+                await this._publisherConnection.CloseAsync();
+                await this._publisherConnection.DisposeAsync().ConfigureAwait(false);
+
+                this._publisherConnection = null;
+            }
+
+            if (this._consumerChannel != null)
+            {
+                await this._consumerChannel.CloseAsync();
+                await this._consumerChannel.DisposeAsync().ConfigureAwait(false);
+
+                this._consumerChannel = null;
+            }
+
+            if (this._consumerConnection != null)
+            {
+                await this._consumerConnection.CloseAsync();
+                await this._consumerConnection.DisposeAsync().ConfigureAwait(false);
+
+                this._consumerConnection = null;
+            }
+
+            GC.SuppressFinalize(this);
         }
     }
 }
